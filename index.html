@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC2026 竞猜模型</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080b12;--bg2:#0e1220;--bg3:#141926;
+  --border:#1a2035;--border2:#243050;
+  --text:#e8edf8;--text2:#7a8aaa;--text3:#3a4560;
+  --green:#00e5a0;--green2:#00b87a;
+  --amber:#f5a623;--red:#ff4060;--blue:#4d9fff;--purple:#a78bfa;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Noto Sans SC',sans-serif;
+  --display:'Bebas Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 18px 80px}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.logo-title{font-family:var(--display);font-size:24px;letter-spacing:.08em}
+.logo-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);font-family:var(--mono);padding:4px 10px;border:1px solid rgba(0,229,160,.2);border-radius:999px;background:rgba(0,229,160,.05)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ver-tag{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(77,159,255,.1);color:var(--blue);font-family:var(--mono);border:1px solid rgba(77,159,255,.2)}
+
+/* Nav */
+.nav{display:flex;gap:3px;margin-bottom:22px;overflow-x:auto;padding-bottom:3px}
+.nav::-webkit-scrollbar{height:2px}
+.nav::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.ntab{padding:7px 15px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all .15s;font-family:var(--sans);letter-spacing:.02em}
+.ntab:hover{border-color:var(--border2);color:var(--text)}
+.ntab.active{background:var(--bg3);color:var(--green);border-color:rgba(0,229,160,.35)}
+.panel{display:none;animation:fadeIn .2s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Sections */
+.sec{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.14em;margin:18px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:15px 17px;margin-bottom:10px}
+.card:hover{border-color:var(--border2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+/* Stats */
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.stat-l{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.stat-v{font-size:22px;font-weight:700;font-family:var(--mono)}
+.stat-s{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* Badges */
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-weight:500}
+.bg{background:rgba(0,229,160,.1);color:var(--green)}
+.ba{background:rgba(245,166,35,.1);color:var(--amber)}
+.br{background:rgba(255,64,96,.1);color:var(--red)}
+.bb{background:rgba(77,159,255,.1);color:var(--blue)}
+
+/* Poly rows */
+.poly-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.poly-row:last-child{border-bottom:none}
+.pr-flag{font-size:17px;flex-shrink:0}
+.pr-name{font-size:13px;font-weight:500;min-width:72px}
+.pr-bar-wrap{flex:1}
+.pr-bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-bottom:2px}
+.pr-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.pr-pct{font-family:var(--mono);font-size:14px;font-weight:500;min-width:48px;text-align:right}
+.pr-chg{font-family:var(--mono);font-size:11px;min-width:48px;text-align:right}
+.up{color:var(--green)}.dn{color:var(--red)}.flat{color:var(--text3)}
+.pr-trad{font-size:11px;color:var(--text3);min-width:52px;text-align:right;font-family:var(--mono)}
+
+/* Signal rows */
+.sig{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sig:last-child{border-bottom:none}
+.sig-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sig-text{flex:1;color:var(--text2);line-height:1.6}
+.sig-text strong{color:var(--text)}
+
+/* Champion cards */
+.cc{border-radius:10px;padding:15px;margin-bottom:10px;border:1.5px solid}
+.cc-buy{background:rgba(0,229,160,.05);border-color:rgba(0,229,160,.35)}
+.cc-wait{background:rgba(245,166,35,.05);border-color:rgba(245,166,35,.3)}
+.cc-info{background:rgba(77,159,255,.05);border-color:rgba(77,159,255,.3)}
+.cc-light{background:rgba(167,139,250,.05);border-color:rgba(167,139,250,.25)}
+.cc-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.cc-flag{font-size:24px}
+.cc-name{font-size:15px;font-weight:600;flex:1}
+.cc-tag{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:500;font-family:var(--mono)}
+
+/* Portfolio */
+.port-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.port-row:last-child{border-bottom:none}
+.port-bar{flex:1;height:4px;border-radius:2px;background:var(--border);overflow:hidden}
+.port-fill{height:100%;border-radius:2px}
+
+/* Score boxes */
+.score-trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.sb{border-radius:8px;padding:12px;text-align:center;border:1px solid}
+.sb1{background:rgba(0,229,160,.06);border-color:rgba(0,229,160,.3)}
+.sb2{background:rgba(77,159,255,.06);border-color:rgba(77,159,255,.25)}
+.sb3{background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.25)}
+.sb-rank{font-size:10px;font-family:var(--mono);font-weight:700;margin-bottom:5px;display:block;letter-spacing:.06em}
+.sb1 .sb-rank{color:var(--green)}.sb2 .sb-rank{color:var(--blue)}.sb3 .sb-rank{color:var(--amber)}
+.sb-score{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.sb-prob{font-size:11px;color:var(--text2);margin-top:2px}
+.sb-odds{font-size:12px;font-weight:500;margin-top:2px}
+.sb1 .sb-odds{color:var(--green)}.sb2 .sb-odds{color:var(--blue)}.sb3 .sb-odds{color:var(--amber)}
+
+/* Verdict */
+.verdict{border-radius:10px;padding:14px 16px;margin:10px 0}
+.v-g{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.3)}
+.v-a{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.3)}
+.v-r{background:rgba(255,64,96,.06);border:1px solid rgba(255,64,96,.3)}
+.vt{font-size:13px;font-weight:700;margin-bottom:5px}
+.v-g .vt{color:var(--green)}.v-a .vt{color:var(--amber)}.v-r .vt{color:var(--red)}
+.vb{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* Countdown */
+.countdown-num{font-family:var(--display);font-size:56px;color:var(--green);line-height:1}
+
+/* Injuries */
+.inj-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.inj-row:last-child{border-bottom:none}
+.inj-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:.06em}
+td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;line-height:1.5}
+tr:hover td{background:var(--bg3);color:var(--text)}
+tr:last-child td{border-bottom:none}
+
+/* Predictor */
+select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:var(--sans);outline:none}
+select:focus{border-color:var(--green)}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 8px rgba(0,229,160,.4)}
+.ri{padding:6px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:var(--mono)}
+.ri:focus{outline:none;border-color:var(--green)}
+.btn-g{padding:7px 14px;border-radius:6px;border:1px solid rgba(0,229,160,.4);background:rgba(0,229,160,.1);color:var(--green);cursor:pointer;font-size:12px;font-family:var(--mono)}
+.btn-g:hover{background:rgba(0,229,160,.18)}
+
+/* Alerts */
+.alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:8px;line-height:1.7;border-left:3px solid}
+.al-g{background:rgba(0,229,160,.06);border-color:var(--green)}
+.al-a{background:rgba(245,166,35,.06);border-color:var(--amber)}
+.al-r{background:rgba(255,64,96,.06);border-color:var(--red)}
+.al-b{background:rgba(77,159,255,.06);border-color:var(--blue)}
+
+/* Backtest */
+.bt-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bt-row:last-child{border-bottom:none}
+.bt-date{font-family:var(--mono);font-size:11px;color:var(--text3);min-width:36px}
+.bt-match{flex:1;color:var(--text2)}
+.bt-match strong{color:var(--text)}
+
+/* Data freshness */
+.fresh{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:10px}
+.fresh-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+
+@media(max-width:600px){.g2,.g3,.g4,.score-trio{grid-template-columns:1fr}.countdown-num{font-size:40px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚽</div>
+    <div>
+      <div class="logo-title">WC2026 MODEL</div>
+      <div class="logo-sub">竞猜分析系统 · MO888888</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="live-pill"><div class="live-dot"></div><span id="update-date">数据同步至 5/20</span></div>
+    <div class="ver-tag">V3.1</div>
+  </div>
+</header>
+
+<div class="nav">
+  <button class="ntab active" onclick="showTab('dashboard',this)">📊 总览</button>
+  <button class="ntab" onclick="showTab('poly',this)">🔗 Polymarket</button>
+  <button class="ntab" onclick="showTab('champion',this)">🏆 冠军投注</button>
+  <button class="ntab" onclick="showTab('predictor',this)">🎯 比赛预测</button>
+  <button class="ntab" onclick="showTab('injuries',this)">🏥 伤情</button>
+  <button class="ntab" onclick="showTab('groups',this)">📋 分组</button>
+  <button class="ntab" onclick="showTab('backtest',this)">🔄 回测</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="panel active">
+  <div class="sec">距开幕倒计时</div>
+  <div class="card" style="border-color:rgba(0,229,160,.25)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="countdown-num" id="countdown">--</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">距6月11日开幕 · 墨西哥 vs 南非 · Estadio Azteca</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">2026 FIFA WORLD CUP</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">48队 · 104场 · 美加墨三国主办</div>
+        <div style="margin-top:8px;display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">
+          <span class="badge bg">6/11 开幕</span>
+          <span class="badge bb">7/19 决赛</span>
+          <span class="badge ba">16城市</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">模型性能</div>
+  <div class="g4">
+    <div class="stat"><div class="stat-l">胜负方向</div><div class="stat-v" style="color:var(--green)">75%</div><div class="stat-s">4场·3/4正确</div></div>
+    <div class="stat"><div class="stat-l">大小球</div><div class="stat-v" style="color:var(--green)">75%</div><div class="stat-s">4场·3/4正确</div></div>
+    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)">25%</div><div class="stat-s">V3红牌层修正</div></div>
+    <div class="stat"><div class="stat-l">Poly总成交</div><div class="stat-v" style="color:var(--blue)">$10亿+</div><div class="stat-s">持续增长</div></div>
+  </div>
+
+  <div class="sec">Polymarket实时（5/20）</div>
+  <div class="card">
+    <div class="fresh"><div class="fresh-dot"></div>数据更新：2026年5月20日</div>
+    <div class="poly-row"><span class="pr-flag">🇫🇷</span><span class="pr-name" style="color:var(--green)">法国</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:72%;background:var(--green)"></div></div></div><span class="pr-pct" style="color:var(--green)">18%</span><span class="pr-chg up">↑领跑</span><span class="pr-trad">+500</span></div>
+    <div class="poly-row"><span class="pr-flag">🇪🇸</span><span class="pr-name">西班牙</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:67%;background:var(--green)"></div></div></div><span class="pr-pct">16-17%</span><span class="pr-chg" style="color:var(--amber)">⚠️Yamal</span><span class="pr-trad">+500</span></div>
+    <div class="poly-row"><span class="pr-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="pr-name">英格兰</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:44%;background:var(--amber)"></div></div></div><span class="pr-pct">11%</span><span class="pr-chg flat">→</span><span class="pr-trad">+650</span></div>
+    <div class="poly-row"><span class="pr-flag">🇧🇷</span><span class="pr-name">巴西</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:36%;background:var(--amber)"></div></div></div><span class="pr-pct">9%</span><span class="pr-chg up">Neymar✅</span><span class="pr-trad">+800</span></div>
+    <div class="poly-row"><span class="pr-flag">🇦🇷</span><span class="pr-name">阿根廷</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:34%;background:var(--amber)"></div></div></div><span class="pr-pct">8.6%</span><span class="pr-chg dn">↓</span><span class="pr-trad">+850</span></div>
+    <div class="poly-row"><span class="pr-flag">🇩🇪</span><span class="pr-name" style="color:var(--blue)">德国</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:21%;background:var(--blue)"></div></div></div><span class="pr-pct" style="color:var(--blue)">5.2%</span><span class="pr-chg up">↑低估⭐</span><span class="pr-trad">+1200</span></div>
+    <div class="poly-row"><span class="pr-flag">🇳🇱</span><span class="pr-name">荷兰</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:14%;background:var(--red)"></div></div></div><span class="pr-pct" style="color:var(--red)">3.5%</span><span class="pr-chg dn">三缺</span><span class="pr-trad">+2000</span></div>
+  </div>
+
+  <div class="sec">关键节点</div>
+  <div class="card">
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>5/22 英格兰名单</strong> — Stones/Bellingham状态，L组预测触发</div><span class="badge ba">后天</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text"><strong>5/25 西班牙名单</strong> — Yamal/Rodri状态，全年最大信息差窗口</div><span class="badge br">⭐⭐最重要</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--blue)"></div><div class="sig-text"><strong>5/30 FIFA截止</strong> — 所有48队名单锁定，6/2公开</div><span class="badge bb">10天后</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>6/11 开幕</strong> — 墨西哥vs南非，高海拔2240m，场馆系数首测</div><span class="badge bg">22天后</span></div>
+  </div>
+
+  <div class="sec">今日重大更新</div>
+  <div class="alert al-g"><strong>✅ 巴西名单确认：Neymar+Raphinha双双入选</strong><br>触发条件满足，+800已入场10%仓位（后防薄弱折扣，从15%降至10%）</div>
+  <div class="alert al-r"><strong>🚨 西班牙：Yamal可能错过小组赛首战（vs佛得角）</strong><br>比"存疑"更严重，5/25名单前西班牙预测保留大误差</div>
+  <div class="alert al-r"><strong>🚨 荷兰：De Ligt背部手术确认缺席</strong><br>Simons+Schouten+De Ligt三缺，防守xG从3.5降至3.0</div>
+</div>
+
+<!-- POLYMARKET -->
+<div id="tab-poly" class="panel">
+  <div class="sec">完整排名</div>
+  <div class="card">
+    <div class="poly-row"><span class="pr-flag">🇫🇷</span><span class="pr-name" style="color:var(--green)">法国</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:72%;background:var(--green)"></div></div></div><span class="pr-pct" style="color:var(--green)">18%</span><span class="pr-chg up">↑+0.2%</span><span class="pr-trad">+500</span></div>
+    <div class="poly-row"><span class="pr-flag">🇪🇸</span><span class="pr-name">西班牙</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:67%;background:var(--green)"></div></div></div><span class="pr-pct">16-17%</span><span class="pr-chg up">↑+0.1%</span><span class="pr-trad">+500</span></div>
+    <div class="poly-row"><span class="pr-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="pr-name">英格兰</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:44%;background:var(--amber)"></div></div></div><span class="pr-pct">11%</span><span class="pr-chg flat">→</span><span class="pr-trad">+650</span></div>
+    <div class="poly-row"><span class="pr-flag">🇧🇷</span><span class="pr-name">巴西</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:36%;background:var(--amber)"></div></div></div><span class="pr-pct">9%</span><span class="pr-chg flat">→</span><span class="pr-trad">+800</span></div>
+    <div class="poly-row"><span class="pr-flag">🇦🇷</span><span class="pr-name">阿根廷</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:34%;background:var(--amber)"></div></div></div><span class="pr-pct">8.6%</span><span class="pr-chg dn">↓-0.4%</span><span class="pr-trad">+850</span></div>
+    <div class="poly-row"><span class="pr-flag">🇵🇹</span><span class="pr-name">葡萄牙</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:33%;background:var(--amber)"></div></div></div><span class="pr-pct">8.3%</span><span class="pr-chg up">↑+0.5%</span><span class="pr-trad">+1000</span></div>
+    <div class="poly-row"><span class="pr-flag">🇩🇪</span><span class="pr-name" style="color:var(--blue)">德国</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:21%;background:var(--blue)"></div></div></div><span class="pr-pct" style="color:var(--blue)">5.2%</span><span class="pr-chg up">↑+0.2%</span><span class="pr-trad">+1200</span></div>
+    <div class="poly-row"><span class="pr-flag">🇳🇱</span><span class="pr-name">荷兰</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:14%;background:var(--red)"></div></div></div><span class="pr-pct" style="color:var(--red)">3.5%</span><span class="pr-chg up">↑+0.5%</span><span class="pr-trad">+2000</span></div>
+    <div class="poly-row"><span class="pr-flag">🇧🇪</span><span class="pr-name">比利时</span><div class="pr-bar-wrap"><div class="pr-bar"><div class="pr-fill" style="width:8%;background:var(--blue)"></div></div></div><span class="pr-pct">2%</span><span class="pr-chg flat">→</span><span class="pr-trad">—</span></div>
+  </div>
+
+  <div class="sec">已验证操作规律</div>
+  <div class="card">
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>规律1：</strong>媒体广泛讨论的消息已被提前定价，正式公布无信息差（法国名单验证）</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>规律2：</strong>真正信息差来自突发未被预测信息——赛前突发伤出，Poly 15-30分钟反应，传统盘滞后1-2小时</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>规律3：</strong>走势方向比单日数字更可靠，需结合全期趋势判断</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>规律4（最大定价异常）：</strong>德国Poly 5.2% vs 传统盘7.7%（+1200），差距2.7%是所有球队最大</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text"><strong>规律5（最大信息差窗口）：</strong>5/25西班牙名单公布后1-2小时，Yamal健康确认→传统盘仍在+500，是全年最佳入场点</div></div>
+  </div>
+</div>
+
+<!-- CHAMPION -->
+<div id="tab-champion" class="panel">
+  <div class="sec">冠军投注策略（更新至5/20）</div>
+
+  <div class="cc cc-buy">
+    <div class="cc-head"><span class="cc-flag">🇫🇷</span><div style="flex:1"><div class="cc-name">法国</div><div style="font-size:11px;color:var(--green);font-family:var(--mono);margin-top:2px">Poly 18% · 传统盘+500 · 三日连涨</div></div><span class="cc-tag" style="background:rgba(0,229,160,.15);color:var(--green)">立即入场</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text">名单锁定26人，伤情最少，进攻xG 4.7+防守xG 4.9，I组出线最无悬念</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text">Camavinga缺席中场略薄（4.5），淘汰赛遇强队是考验</div></div>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(0,229,160,.05);border-radius:6px;font-size:12px;color:var(--green);font-family:var(--mono)">建议仓位：40% · 今天可入场 · +500</div>
+  </div>
+
+  <div class="cc cc-info">
+    <div class="cc-head"><span class="cc-flag">🇩🇪</span><div style="flex:1"><div class="cc-name">德国</div><div style="font-size:11px;color:var(--blue);font-family:var(--mono);margin-top:2px">Poly 5.2% · 传统盘+1200(7.7%) · 差距2.7%最大</div></div><span class="cc-tag" style="background:rgba(77,159,255,.15);color:var(--blue)">价值最高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--blue)"></div><div class="sig-text">Poly散户系统性低估，传统盘vs Poly差距是所有球队最大定价异常</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text">E组最轻松（库拉索/厄瓜多尔/科特迪瓦），Musiala+Wirtz+Havertz完整</div></div>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(77,159,255,.05);border-radius:6px;font-size:12px;color:var(--blue);font-family:var(--mono)">建议仓位：25% · 今天可入场 · +1200</div>
+  </div>
+
+  <div class="cc cc-buy">
+    <div class="cc-head"><span class="cc-flag">🇧🇷</span><div style="flex:1"><div class="cc-name">巴西</div><div style="font-size:11px;color:var(--green);font-family:var(--mono);margin-top:2px">Poly 9% · 传统盘+800 · Neymar已入选✅</div></div><span class="cc-tag" style="background:rgba(0,229,160,.12);color:var(--green)">已触发✅</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text">Neymar+Raphinha双双入选，进攻xG从3.5升至4.0</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text">后防薄弱：Militão缺+Bremer ACL刚复原，防守xG降至3.6，仓位折扣</div></div>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(0,229,160,.05);border-radius:6px;font-size:12px;color:var(--green);font-family:var(--mono)">建议仓位：10%（从15%降，后防折扣）· +800</div>
+  </div>
+
+  <div class="cc cc-wait">
+    <div class="cc-head"><span class="cc-flag">🇪🇸</span><div style="flex:1"><div class="cc-name">西班牙</div><div style="font-size:11px;color:var(--amber);font-family:var(--mono);margin-top:2px">Poly 16-17% · 传统盘+500 · Yamal首战存疑</div></div><span class="cc-tag" style="background:rgba(245,166,35,.15);color:var(--amber)">等5/25名单</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text">Yamal可能错过首战，Nico Williams新伤，Rodri存疑，四核状态未定</div></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text">若Yamal+Rodri健康→立刻重仓25-30%，是全年最大信息差窗口</div></div>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(245,166,35,.05);border-radius:6px;font-size:12px;color:var(--amber);font-family:var(--mono)">5/25名单是全年最重要单一事件</div>
+  </div>
+
+  <div class="cc cc-light">
+    <div class="cc-head"><span class="cc-flag">🇦🇷</span><div style="flex:1"><div class="cc-name">阿根廷</div><div style="font-size:11px;color:var(--purple);font-family:var(--mono);margin-top:2px">Poly 8.6%↓ · 传统盘+850 · 轻仓</div></div><span class="cc-tag" style="background:rgba(167,139,250,.12);color:var(--purple)">10%轻仓</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text">梅西最后一届情绪溢价，J组出线无悬念，但Poly三日连跌+后防老化</div></div>
+  </div>
+
+  <div class="sec">当前组合分配</div>
+  <div class="card">
+    <div class="port-row"><span style="font-size:17px">🇫🇷</span><span style="font-size:13px;font-weight:500;min-width:70px;color:var(--green)">法国</span><div class="port-bar"><div class="port-fill" style="width:80%;background:var(--green)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--green)">40%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">+500 · 现在</span></div>
+    <div class="port-row"><span style="font-size:17px">🇩🇪</span><span style="font-size:13px;font-weight:500;min-width:70px;color:var(--blue)">德国</span><div class="port-bar"><div class="port-fill" style="width:50%;background:var(--blue)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--blue)">25%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">+1200 · 现在</span></div>
+    <div class="port-row"><span style="font-size:17px">🇧🇷</span><span style="font-size:13px;font-weight:500;min-width:70px">巴西</span><div class="port-bar"><div class="port-fill" style="width:20%;background:var(--amber)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--amber)">10%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">+800 · 已触发</span></div>
+    <div class="port-row"><span style="font-size:17px">🇦🇷</span><span style="font-size:13px;font-weight:500;min-width:70px">阿根廷</span><div class="port-bar"><div class="port-fill" style="width:20%;background:var(--amber)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--amber)">10%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">+850 · 轻仓</span></div>
+    <div class="port-row"><span style="font-size:17px">🇪🇸</span><span style="font-size:13px;font-weight:500;min-width:70px">西班牙</span><div class="port-bar"><div class="port-fill" style="width:0%;background:var(--green)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--text3)">0%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">5/25触发</span></div>
+    <div class="port-row"><span style="font-size:17px">💰</span><span style="font-size:13px;font-weight:500;min-width:70px;color:var(--text3)">预留</span><div class="port-bar"><div class="port-fill" style="width:10%;background:var(--text3)"></div></div><span style="font-family:var(--mono);font-size:14px;font-weight:500;min-width:36px;text-align:right;color:var(--text3)">15%</span><span style="font-size:11px;color:var(--text3);min-width:100px;text-align:right;font-family:var(--mono)">开赛后追加</span></div>
+    <div style="margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:6px;font-size:12px;color:var(--text3)">⚠️ 总冠军仓位建议控制在总资金5-8%以内，资金锁定2个月</div>
+  </div>
+</div>
+
+<!-- PREDICTOR -->
+<div id="tab-predictor" class="panel">
+  <div class="sec">比赛参数输入</div>
+  <div class="g2">
+    <div class="card">
+      <div style="margin-bottom:10px"><div style="font-size:12px;color:var(--text2);margin-bottom:5px">赛事类型</div>
+        <select id="p-type" onchange="runPredict()"><option value="group">小组赛（常规）</option><option value="group_last">小组赛（末轮）</option><option value="ko">淘汰赛</option><option value="sf">半/决赛</option></select></div>
+      <div style="margin-bottom:10px"><div style="font-size:12px;color:var(--text2);margin-bottom:5px">强弱对比</div>
+        <select id="p-str" onchange="runPredict()"><option value="even">势均力敌</option><option value="slight">主队略强</option><option value="clear">主队明显占优</option><option value="mismatch">强弱悬殊（差35+）</option></select></div>
+      <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px">战略压力</div>
+        <select id="p-press" onchange="runPredict()"><option value="normal">常规</option><option value="host_must">主队必须进球</option><option value="away_lead">客队持有优势</option><option value="both_must">双方都需进球</option></select></div>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--text2)">主队进攻</span><span style="font-family:var(--mono);color:var(--green);font-weight:500" id="lv-ha">3</span></div><input type="range" min="1" max="5" value="3" id="p-ha" oninput="document.getElementById('lv-ha').textContent=this.value;runPredict()"></div>
+      <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--text2)">主队防守</span><span style="font-family:var(--mono);color:var(--green);font-weight:500" id="lv-hd">3</span></div><input type="range" min="1" max="5" value="3" id="p-hd" oninput="document.getElementById('lv-hd').textContent=this.value;runPredict()"></div>
+      <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--text2)">客队进攻</span><span style="font-family:var(--mono);color:var(--green);font-weight:500" id="lv-aa">3</span></div><input type="range" min="1" max="5" value="3" id="p-aa" oninput="document.getElementById('lv-aa').textContent=this.value;runPredict()"></div>
+      <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px">场馆系数</div>
+        <select id="p-venue" onchange="runPredict()"><option value="normal">标准（温哥华/波士顿）</option><option value="altitude">高海拔（墨西哥城2240m）</option><option value="heat">高温高湿（迈阿密/达拉斯）</option></select></div>
+    </div>
+  </div>
+
+  <div class="sec">比分预测</div>
+  <div class="score-trio">
+    <div class="sb sb1"><span class="sb-rank">★ 首选</span><div class="sb-score" id="s1">--</div><div class="sb-prob" id="p1">--</div><div class="sb-odds" id="o1">--</div></div>
+    <div class="sb sb2"><span class="sb-rank">★ 次选</span><div class="sb-score" id="s2">--</div><div class="sb-prob" id="p2">--</div><div class="sb-odds" id="o2">--</div></div>
+    <div class="sb sb3"><span class="sb-rank">○ 备选</span><div class="sb-score" id="s3">--</div><div class="sb-prob" id="p3">--</div><div class="sb-odds" id="o3">--</div></div>
+  </div>
+  <div id="v-area"></div>
+  <div class="card" style="border-color:rgba(255,64,96,.3);margin-top:6px">
+    <div style="font-size:11px;color:var(--red);margin-bottom:4px">⚠️ F0.5 红牌备选（V3）</div>
+    <div id="rc" style="font-size:13px;color:var(--text2)">运行预测后生成...</div>
+  </div>
+
+  <div class="sec">已锁定高置信度预测</div>
+  <div class="card">
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>法国 vs 伊拉克（6/20 费城）</strong> — 首选4-0，次选3-0，备选4-1<br><span style="font-size:11px;color:var(--text3)">强弱悬殊+法国最强阵容，最高置信度</span></div><span class="badge bg">最高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>德国 vs 库拉索（6/14 休斯顿）</strong> — 首选3-0，次选4-0，备选3-1<br><span style="font-size:11px;color:var(--text3)">排名差约50位，高温补时进球↑</span></div><span class="badge bg">高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>比利时 vs 新西兰（6/15 西雅图）</strong> — 首选3-0，次选2-0，备选3-1</div><span class="badge bg">高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>巴西 vs 海地（6/19）</strong> — 首选3-1，次选2-0，备选3-0<br><span style="font-size:11px;color:var(--text3)">今日解锁，Neymar+Raphinha入选</span></div><span class="badge bg">高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>阿根廷 vs 约旦（6/16 堪萨斯城）</strong> — 首选3-1，次选2-0，备选3-0<br><span style="font-size:11px;color:var(--text3)">后防隐忧→BTTS概率上调</span></div><span class="badge ba">中高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>伊朗 vs 新西兰（6/15 洛杉矶）</strong> — 首选1-0，次选1-1<br><span style="font-size:11px;color:var(--text3)">双方防守为主，低进球场景</span></div><span class="badge ba">中</span></div>
+  </div>
+
+  <div class="sec">赛后录入</div>
+  <div style="display:flex;gap:8px;align-items:center;padding:12px;background:var(--bg3);border-radius:8px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--text3)">实际比分：</span>
+    <input class="ri" id="actual" placeholder="如: 2-1" style="width:80px">
+    <button class="btn-g" onclick="logResult()">记录</button>
+    <span id="log-st" style="font-size:12px"></span>
+  </div>
+</div>
+
+<!-- INJURIES -->
+<div id="tab-injuries" class="panel">
+  <div class="sec">确认缺席</div>
+  <div class="card">
+    <div class="inj-row"><div class="inj-status" style="background:var(--red)"></div><span style="font-size:15px">🇧🇷</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Rodrygo · Estêvão · Militão</div><div style="font-size:12px;color:var(--text2)">ACL / 股四头肌4级 / 腿腱 · 巴西右路全灭</div></div><span class="badge br">3人</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--red)"></div><span style="font-size:15px">🇳🇱</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Simons · Schouten · De Ligt</div><div style="font-size:12px;color:var(--text2)">ACL×2 + 背部手术 · 荷兰防线重创 · 防守xG 3.0</div></div><span class="badge br">3人</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--red)"></div><span style="font-size:15px">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Ben White · Livramento</div><div style="font-size:12px;color:var(--text2)">膝盖整赛季 / 大腿</div></div><span class="badge br">确认</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--red)"></div><span style="font-size:15px">🇩🇪</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Serge Gnabry</div><div style="font-size:12px;color:var(--text2)">内收肌撕裂</div></div><span class="badge br">确认</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--red)"></div><span style="font-size:15px">🇯🇵</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">三笘薰 · 南野拓实</div><div style="font-size:12px;color:var(--text2)">伤病落选</div></div><span class="badge br">落选</span></div>
+  </div>
+
+  <div class="sec">存疑追踪（每日关注）</div>
+  <div class="card">
+    <div class="inj-row"><div class="inj-status" style="background:var(--amber)"></div><span style="font-size:15px">🇪🇸</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Lamine Yamal ⭐⭐</div><div style="font-size:12px;color:var(--text2)">腘绳肌 · <strong style="color:var(--red)">可能错过首战！</strong>比"存疑"更严重 · 缺席→xG -1.8</div></div><span class="badge br">高危</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--amber)"></div><span style="font-size:15px">🇪🇸</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Nico Williams</div><div style="font-size:12px;color:var(--text2)">5/10新增肌肉伤，原替补方案失效</div></div><span class="badge br">新增</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--amber)"></div><span style="font-size:15px">🇪🇸</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Rodri · Merino</div><div style="font-size:12px;color:var(--text2)">体能/膝盖存疑 · 骨折目标6/4复出</div></div><span class="badge ba">存疑</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--amber)"></div><span style="font-size:15px">🇨🇦</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Alphonso Davies</div><div style="font-size:12px;color:var(--text2)">5/6腘绳肌 · 争分夺秒 · 缺席→加拿大-40%</div></div><span class="badge br">争分夺秒</span></div>
+    <div class="inj-row"><div class="inj-status" style="background:var(--green)"></div><span style="font-size:15px">🇧🇧</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Kevin De Bruyne</div><div style="font-size:12px;color:var(--text2)">轻微腹股沟 · 可控 · 已入选 · xG打8折</div></div><span class="badge bg">可控</span></div>
+  </div>
+</div>
+
+<!-- GROUPS -->
+<div id="tab-groups" class="panel">
+  <div class="sec">12组分组</div>
+  <table>
+    <thead><tr><th>组</th><th>4队</th><th>投注价值</th><th>重点场次</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>🇲🇽 🇿🇦 🇰🇷 🇨🇿</td><td><span class="badge ba">高海拔</span></td><td>6/11 墨西哥vs南非</td></tr>
+      <tr><td>B</td><td>🇨🇦 🇧🇦 🇨🇭 🇶🇦</td><td><span class="badge ba">Davies伤</span></td><td>加拿大首场</td></tr>
+      <tr><td>C</td><td>🇧🇷 🇲🇦 🇭🇹 🏴󠁧󠁢󠁳󠁣󠁴󠁬</td><td><span class="badge bg">悬殊场</span></td><td>6/19 巴西vs海地</td></tr>
+      <tr><td>D</td><td>🇺🇸 🇵🇾 🇦🇺 🇹🇷</td><td><span class="badge bb">东道主</span></td><td>美国首场</td></tr>
+      <tr><td><strong>E</strong></td><td>🇩🇪 🇨🇮 🇪🇨 🇨🇼</td><td><span class="badge bg">最强悬殊⭐</span></td><td>6/14 德国vs库拉索</td></tr>
+      <tr><td>F</td><td>🇳🇱 🇯🇵 🇸🇪 🇹🇳</td><td><span class="badge ba">荷兰三缺</span></td><td>荷兰vs日本</td></tr>
+      <tr><td>G</td><td>🇧🇪 🇪🇬 🇮🇷 🇳🇿</td><td><span class="badge bg">名单已知</span></td><td>6/15 比利时vs新西兰</td></tr>
+      <tr><td>H</td><td>🇪🇸 🇸🇦 🇺🇾 🇨🇻</td><td><span class="badge br">等5/25名单</span></td><td>西班牙首场</td></tr>
+      <tr><td><strong>I</strong></td><td>🇫🇷 🇸🇳 🇳🇴 🇮🇶</td><td><span class="badge bg">最高价值⭐</span></td><td>6/20 法国vs伊拉克</td></tr>
+      <tr><td>J</td><td>🇦🇷 🇩🇿 🇦🇹 🇯🇴</td><td><span class="badge ba">后防隐忧</span></td><td>6/16 阿根廷vs约旦</td></tr>
+      <tr><td>K</td><td>🇵🇹 🇺🇿 🇨🇴 🇨🇩</td><td><span class="badge bb">C罗最后届</span></td><td>葡萄牙首场</td></tr>
+      <tr><td>L</td><td>🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇬🇭 🇭🇷 🇵🇦</td><td><span class="badge ba">等5/22名单</span></td><td>英格兰vs克罗地亚</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sec">场馆系数</div>
+  <table>
+    <thead><tr><th>城市</th><th>海拔/气候</th><th>大球修正</th><th>补时进球</th></tr></thead>
+    <tbody>
+      <tr><td>🇲🇽 墨西哥城</td><td style="color:var(--red)">2240m高原</td><td style="color:var(--red)">-0.15</td><td style="color:var(--green)">+12%</td></tr>
+      <tr><td>🇲🇽 瓜达拉哈拉</td><td style="color:var(--amber)">1566m温热</td><td style="color:var(--amber)">-0.08</td><td style="color:var(--green)">+7%</td></tr>
+      <tr><td>🇺🇸 迈阿密/达拉斯</td><td style="color:var(--amber)">高温高湿</td><td>-0.05</td><td style="color:var(--green)">+8%</td></tr>
+      <tr><td>🇨🇦 温哥华/多伦多</td><td style="color:var(--green)">凉爽</td><td style="color:var(--green)">+0.05</td><td>0%</td></tr>
+      <tr><td>🇺🇸 波士顿/纽约</td><td>温和</td><td>0</td><td>+2%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- BACKTEST -->
+<div id="tab-backtest" class="panel">
+  <div class="g4" style="margin-bottom:14px">
+    <div class="stat"><div class="stat-l">总场次</div><div class="stat-v" style="color:var(--blue)" id="bt-t">4</div></div>
+    <div class="stat"><div class="stat-l">方向正确</div><div class="stat-v" style="color:var(--green)" id="bt-d">3</div></div>
+    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)" id="bt-s">1</div></div>
+    <div class="stat"><div class="stat-l">红牌场次</div><div class="stat-v" style="color:var(--red)">2</div></div>
+  </div>
+  <div class="card" id="bt-list">
+    <div class="bt-row"><span class="bt-date">5/5</span><span class="bt-match"><strong>阿森纳 vs 马竞</strong> 预测阿森纳赢 → 1-0 ✓ · 漏失Under 1.5</span><span class="badge bg">✓</span></div>
+    <div class="bt-row"><span class="bt-date">5/6</span><span class="bt-match"><strong>拜仁 vs PSG</strong> 预测大球/拜仁赢 → 1-1 · 早球收缩</span><span class="badge br">✗</span></div>
+    <div class="bt-row"><span class="bt-date">5/7</span><span class="bt-match"><strong>维拉 vs 森林</strong> 预测2-1/2-0 → 4-0 · 红牌雪崩</span><span class="badge bg">方向✓</span></div>
+    <div class="bt-row"><span class="bt-date">5/7</span><span class="bt-match"><strong>弗赖堡 vs 布拉加</strong> 预测2-1/1-0 → 3-1 · 红牌+1球</span><span class="badge bg">方向✓</span></div>
+  </div>
+  <div class="sec">添加记录</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;background:var(--bg3);border-radius:8px">
+    <input class="ri" id="nm" placeholder="比赛名称" style="width:150px">
+    <input class="ri" id="np" placeholder="预测" style="width:70px">
+    <input class="ri" id="na" placeholder="实际" style="width:70px">
+    <select id="nd" style="width:85px"><option value="✓">方向✓</option><option value="✗">方向✗</option></select>
+    <button class="btn-g" onclick="addRecord()">+ 添加</button>
+  </div>
+</div>
+
+</div>
+<script>
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function updateCountdown(){
+  const t=new Date('2026-06-11T19:00:00Z'),n=new Date(),d=t-n;
+  if(d<=0){document.getElementById('countdown').textContent='🏆 进行中';return;}
+  document.getElementById('countdown').textContent=Math.floor(d/86400000)+'天 '+Math.floor((d%86400000)/3600000)+'h';
+}
+updateCountdown();setInterval(updateCountdown,60000);
+function poisson(k,l){let r=Math.exp(-l);for(let i=0;i<k;i++)r*=l/(i+1);return r;}
+function runPredict(){
+  const type=document.getElementById('p-type').value,str=document.getElementById('p-str').value,
+    press=document.getElementById('p-press').value,venue=document.getElementById('p-venue').value,
+    ha=+document.getElementById('p-ha').value,hd=+document.getElementById('p-hd').value,aa=+document.getElementById('p-aa').value;
+  let hx=1.2+(ha-3)*0.25-(hd-3)*0.08,ax=0.9+(aa-3)*0.2;
+  if(str==='slight'){hx+=0.2;ax-=0.1}if(str==='clear'){hx+=0.5;ax-=0.2}
+  if(str==='mismatch'){hx+=0.9;ax=Math.max(0.2,ax-0.45)}
+  if(press==='host_must')hx+=0.3;if(press==='away_lead'){ax-=0.25;hx+=0.15}
+  if(press==='both_must'){hx+=0.2;ax+=0.2}
+  if(type==='sf'){hx-=0.2;ax-=0.2}if(type==='group_last'){hx-=0.1;ax-=0.1}
+  if(venue==='altitude'){hx-=0.12;ax-=0.1}if(venue==='heat'){hx-=0.05;ax-=0.05}
+  hx=Math.max(0.25,hx);ax=Math.max(0.15,ax);
+  const sc=[];for(let h=0;h<=5;h++)for(let a=0;a<=4;a++)sc.push({h,a,p:poisson(h,hx)*poisson(a,ax)});
+  sc.sort((x,y)=>y.p-x.p);const tot=sc.reduce((s,x)=>s+x.p,0);
+  sc.slice(0,3).forEach((s,i)=>{const n=i+1;
+    document.getElementById('s'+n).textContent=s.h+'-'+s.a;
+    document.getElementById('p'+n).textContent='概率 ~'+((s.p/tot*100).toFixed(1))+'%';
+    document.getElementById('o'+n).textContent='赔率 ~'+(1/(s.p/tot)).toFixed(1)+'x';
+  });
+  const sc2=Math.round(65+(hx-1.2)*8);
+  let vc,vt,vb;
+  if(sc2>=72){vc='v-g';vt='✓ 有效信号 — 可入场';vb='主队xG '+hx.toFixed(2)+'，首选比分'+sc[0].h+'-'+sc[0].a+'。'}
+  else if(sc2>=55){vc='v-a';vt='◑ 中等信号 — 轻仓';vb='信号中等，建议轻仓。'}
+  else{vc='v-r';vt='✗ 信号不足 — 观望';vb='建议观望此场。'}
+  document.getElementById('v-area').innerHTML=`<div class="verdict ${vc}"><div class="vt">${vt}</div><div class="vb">${vb}</div></div>`;
+  const rh=Math.min(5,sc[0].h+(type==='ko'||type==='sf'?2:1));
+  document.getElementById('rc').innerHTML=`<strong style="color:var(--red)">红牌备选：${rh}-${sc[0].a}</strong> <span style="color:var(--text3);margin-left:8px">淘汰赛红牌概率18-22%，建议仓位5-10%</span>`;
+  window._lp=sc[0].h+'-'+sc[0].a;
+}
+runPredict();
+function logResult(){
+  const a=document.getElementById('actual').value.trim();if(!a)return;
+  const hit=a===window._lp;
+  document.getElementById('log-st').innerHTML=hit?'<span style="color:var(--green);font-family:var(--mono)">✓ 命中！</span>':`<span style="color:var(--amber);font-family:var(--mono)">预测${window._lp||'--'} 实际${a}</span>`;
+  document.getElementById('actual').value='';
+}
+function addRecord(){
+  const m=document.getElementById('nm').value.trim(),p=document.getElementById('np').value.trim(),
+    a=document.getElementById('na').value.trim(),d=document.getElementById('nd').value;
+  if(!m||!p||!a)return;
+  const hit=p===a,date=new Date().toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});
+  const row=document.createElement('div');row.className='bt-row';
+  row.innerHTML=`<span class="bt-date">${date}</span><span class="bt-match"><strong>${m}</strong> 预测${p}→实际${a}</span><span class="badge ${d==='✓'?'bg':'br'}">${d}</span>`;
+  document.getElementById('bt-list').appendChild(row);
+  document.getElementById('bt-t').textContent=+document.getElementById('bt-t').textContent+1;
+  if(d==='✓')document.getElementById('bt-d').textContent=+document.getElementById('bt-d').textContent+1;
+  if(hit)document.getElementById('bt-s').textContent=+document.getElementById('bt-s').textContent+1;
+  ['nm','np','na'].forEach(id=>document.getElementById(id).value='');
+}
+</script>
+</body>
+</html>
