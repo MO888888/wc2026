@@ -131,9 +131,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 
   <div class="sec">模型性能</div>
   <div class="g4">
-    <div class="stat"><div class="stat-l">胜负方向</div><div class="stat-v" style="color:var(--green)">75%</div><div class="stat-s">4场·3/4正确</div></div>
-    <div class="stat"><div class="stat-l">大小球</div><div class="stat-v" style="color:var(--green)">75%</div><div class="stat-s">4场·3/4正确</div></div>
-    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)">25%</div><div class="stat-s">V3红牌层修正</div></div>
+    <div class="stat"><div class="stat-l">胜负方向</div><div class="stat-v" style="color:var(--green)">75%</div><div class="stat-s">8场·6/8正确</div></div>
+    <div class="stat"><div class="stat-l">大小球</div><div class="stat-v" style="color:var(--amber)">60%</div><div class="stat-s">5场·3/5正确</div></div>
+    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)">25%</div><div class="stat-s">弱化叙事标签，回归xG数据</div></div>
     <div class="stat"><div class="stat-l">Poly成交量</div><div class="stat-v" style="color:var(--blue)">$20亿+</div><div class="stat-s">两周内翻倍</div></div>
   </div>
 
@@ -151,6 +151,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   </div>
 
   <div class="sec">今日重大更新</div>
+  <div class="alert al-r"><strong>⚠️ 再次修正：美国4-1大胜巴拉圭，"黑马叙事"规则被证伪</strong> — 刚基于加拿大教训把首选调成1-1，结果美国轻松大胜(xG1.35 vs 0.47)。方向✓(次选/备选含美国胜)但比分✗。结论：上一条"黑马型对手上调平局"规则过拟合于单一样本(加拿大-波黑)，巴拉圭"36年回归"叙事与波黑"淘汰意大利"叙事看似同类，实际防守质量完全不同。<strong>F0修正最终方案：废除基于叙事标签的对手分类，改为逐场参考赛前xG预期/近期失球数据，东道主开幕战不做统一加成</strong>。回测8场，方向6/8(75%)，比分2/8(25%)。</div>
+  <div class="alert al-r"><strong>⚠️ 模型重大修正：加拿大1-1被波黑逼平</strong> — 预测1-0/2-0/2-1全部落空，方向✗比分✗。波黑预选赛10场全破门+近9场不败，是"黑马硬骨头"型对手，F0东道主净胜球+0.5修正对此类对手失效。新规则：东道主开幕战修正需按对手强度分级——弱旅(南非型)适用+0.5；黑马型(波黑/巴拉圭型)应转为上调平局权重。已据此将美国vs巴拉圭首选改为1-1。回测7场，方向5/7(71%)，比分2/7(29%)。实盘500u+100u两注损失。</div>
+  <div class="alert al-g"><strong>🎯 韩国2-1逆转捷克</strong> — 备选2-1精确命中(比分+方向)！剧本：捷克定位球先入球→韩国连入两球翻盘。回测更新为6场，方向5/6(83%)，比分2/6(33%)。</div>
+  <div class="alert al-r"><strong>🚨 加拿大伤情</strong> — Davies(腿筋伤,大概率缺战首秀)、Bombito(确认缺席整届)、Flores(ACL缺席)。6/13对波黑(多伦多)防线减员，但东道主主场首秀F0修正仍支持小胜。</div>
+  <div class="alert al-r"><strong>📊 开幕战结果：墨西哥2-0南非</strong> — 预测1-0/2-1，方向✓比分✗。新增F0规则：东道主首场净胜球预期+0.5（比分预测上调一档）。回测更新为5场，方向4/5(80%)，比分1/5(20%)。</div>
   <div class="alert al-g"><strong>✅ 阿根廷热身3-0冰岛，Messi进球！首战可出战</strong></div>
   <div class="alert al-r"><strong>🚨 荷兰 Timber 确认退出 → Geertruida替换，防线再损一人</strong></div>
   <div class="alert al-a"><strong>⚠️ 英格兰 Saka 跟腱伤 — 未达100%，赛前首发需确认</strong></div>
@@ -249,6 +254,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
       <div><div style="font-size:12px;color:var(--text2);margin-bottom:5px">场馆系数</div><select id="p-venue" onchange="runPredict()"><option value="normal">标准（温哥华/波士顿）</option><option value="altitude">高海拔（墨西哥城2240m）</option><option value="heat">高温高湿（迈阿密/达拉斯）</option></select></div>
     </div>
   </div>
+  <div class="card" style="border-color:rgba(255,64,96,.5);background:rgba(255,64,96,.06);margin-top:6px">
+    <div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px">🔴 P0最高优先级规则（6/12新增，源于加拿大/美国连续失误复盘）</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+      <strong>市场隐含概率排序 &gt; F0/叙事修正。</strong> 加拿大vs波黑案例：传统盘比分赔率1-1为6.6(隐含~15.4%)，仅次于1-0的6.0(~16.7%)，但因"东道主主场首秀"等叙事逻辑被从预测列表中剔除，最终1-1正是实际结果——这不是信息差，是排序逻辑错误。<br><br>
+      <strong>新流程：</strong><br>
+      1. 先取传统盘/Polymarket比分盘隐含概率最高的前2-3个比分，直接作为预测候选基础<br>
+      2. F0东道主修正、对手叙事标签(黑马/回归/淘汰强敌等)等"软逻辑"<strong>只能用于在概率接近的候选间排序微调</strong>，不能用来否定或替换市场已给出的高概率选项<br>
+      3. 美国vs巴拉圭案例进一步说明：基于单场样本(加拿大-波黑)归纳出的"对手强度叙事分类"易过拟合，应避免脆弱的小样本规则泛化
+    </div>
+  </div>
   <div class="sec">比分预测</div>
   <div class="score-trio">
     <div class="sb sb1"><span class="sb-rank">★ 首选</span><div class="sb-score" id="s1">--</div><div class="sb-prob" id="p1">--</div><div class="sb-odds" id="o1">--</div></div>
@@ -258,8 +273,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   <div id="v-area"></div>
   <div class="card" style="border-color:rgba(255,64,96,.3);margin-top:6px"><div style="font-size:11px;color:var(--red);margin-bottom:4px">⚠️ F0.5 红牌备选（V3）</div><div id="rc" style="font-size:13px;color:var(--text2)">运行预测后生成...</div></div>
   <div class="sec">已锁定比分预测</div>
+
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>卡塔尔 vs 瑞士（旧金山）</strong> — 首选2-0(瑞士)，次选3-0(瑞士)，备选1-0(瑞士)<br><span style="font-size:11px;color:var(--text3)">实盘比分盘修正：瑞士0-2隐含19.2%＞0-3的15.4%＞0-1的13.3%，0-0仅4.8%已剔除。让球盘瑞士-2进一步印证2球差预期，与首选一致</span></div><span class="badge bg">高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>巴西 vs 摩洛哥（纽约）</strong> — 首选1-0(巴西)，次选2-0(巴西)，备选1-1平局<br><span style="font-size:11px;color:var(--text3)">实盘比分盘：巴西1-0隐含16.7%＞巴西2-0的14.3%＞1-1的13.3%。让球-0.5/1为温和倾向，大小球接近中性微偏小球，与前三档一致。<strong>Polymarket对照</strong>：独赢巴西59%/平局26%/摩洛哥18%，与传统盘几乎完全一致(59.5%/27.0%/18.9%)，方向无分歧；但大小球Poly明显偏小(U2.5=57% vs O2.5=44%，传统盘几乎五五开)——三档预测均≤2球，Poly数据强化了"小比分"的置信度。裁判Vincic低红牌倾向+摩洛哥Ezzalzouli临场缺战，进一步支持首选1-0/次选2-0权重</span></div><span class="badge ba">中-较高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>海地 vs 苏格兰（波士顿）</strong> — 首选2-0(苏格兰)，次选1-0(苏格兰)，备选2-1(苏格兰)<br><span style="font-size:11px;color:var(--text3)">实盘比分盘：苏格兰2-0隐含14.3%明显领先，苏格兰1-0与苏格兰2-1并列第二(各12.5%)，平局1-1(11.1%)垫底。让球-1+大小球偏大球均支持2球差结果</span></div><span class="badge bg">较高</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>澳大利亚 vs 土耳其（温哥华）</strong> — 首选1-0(土耳其)，次选1-1平局，备选2-0(土耳其)<br><span style="font-size:11px;color:var(--text3)">实盘比分盘：土耳其1-0隐含15.4%领先，土耳其2-0与1-1平局并列第二(各13.3%)，土耳其2-1(12.5%)第四。大小球明显偏小球(implied小54.9%)，支持1-0/1-1优先于2-1</span></div><span class="badge ba">中</span></div>
   <div class="card">
-    <div class="sig"><div class="sig-dot" style="background:var(--amber)"></div><div class="sig-text"><strong>墨西哥 vs 南非（6/11 墨西哥城）</strong> — 首选1-0，次选2-1<br><span style="font-size:11px;color:var(--text3)">高海拔2240m，低比分场景，补时+12%</span></div><span class="badge ba">中</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text"><strong>墨西哥 vs 南非（6/11 墨西哥城）</strong> — 预测1-0/2-1 → 实际2-0<br><span style="font-size:11px;color:var(--text3)">方向✓ 比分✗ · 东道主开幕战净胜球被低估，已写入F0修正</span></div><span class="badge br">已完赛</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>韩国 vs 捷克（6/11 瓜达拉哈拉）</strong> — 首选1-1/次选1-0/备选2-1 → 实际2-1<br><span style="font-size:11px;color:var(--text3)">备选精确命中！捷克59'先入球(Krejci)，韩国67'/80'连入两球逆转，验证"定位球先丢+揭幕战谨慎+主队后劲"剧本</span></div><span class="badge bg">备选✓命中</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text"><strong>美国 vs 巴拉圭（6/12 洛杉矶）</strong> — 预测1-1/1-0/2-1 → 实际4-1美国大胜<br><span style="font-size:11px;color:var(--text3)">方向✓(次选/备选含美国胜)比分✗ · Bobadilla 7'自摆乌龙+Balogun两球(31'/45+5')+Reyna 90+8'，美国xG1.35 vs 巴拉圭0.47。"36年回归"叙事再次误导——巴拉圭实际防线脆弱，与波黑的"黑马硬骨头"完全不是一类。<strong>再次修正</strong>：基于单一对手叙事(回归/淘汰强敌)做强度分级不可靠，应回归xG/近期失球数据而非故事性标签。F0东道主修正应逐场基于具体数据，不设通用对手分类规则</span></div><span class="badge ba">方向✓</span></div>
+    <div class="sig"><div class="sig-dot" style="background:var(--red)"></div><div class="sig-text"><strong>加拿大 vs 波黑（6/12 多伦多BMO Field）</strong> — 预测1-0/2-0/2-1 → 实际1-1<br><span style="font-size:11px;color:var(--text3)">方向✗比分✗ · 波黑Lukic 21'头球先入，加拿大替补Larin 78'扳平。波黑预选赛10场全部破门、近9场不败，是远强于南非的黑马型对手。<strong>F0东道主修正不能一刀切</strong>：净胜球+0.5仅适用于对手明显弱于东道主(南非型)；面对"黑马硬骨头"(波黑/巴拉圭型)应大幅降低修正甚至上调平局权重。实盘500u方向+100u比分(1-0)均损失</span></div><span class="badge br">已完赛</span></div>
     <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>德国 vs 库拉索（6/14 休斯顿）</strong> — 首选3-0，次选4-0，备选3-1</div><span class="badge bg">高</span></div>
     <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>西班牙 vs 佛得角（6/15 亚特兰大）</strong> — 首选2-0，次选3-0，备选2-1</div><span class="badge bg">高</span></div>
     <div class="sig"><div class="sig-dot" style="background:var(--green)"></div><div class="sig-text"><strong>比利时 vs 新西兰（6/15 西雅图）</strong> — 首选3-0，次选2-0，备选3-1</div><span class="badge bg">高</span></div>
@@ -333,16 +356,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <!-- BACKTEST -->
 <div id="tab-backtest" class="panel">
   <div class="g4" style="margin-bottom:14px">
-    <div class="stat"><div class="stat-l">总场次</div><div class="stat-v" style="color:var(--blue)" id="bt-t">4</div></div>
-    <div class="stat"><div class="stat-l">方向正确</div><div class="stat-v" style="color:var(--green)" id="bt-d">3</div></div>
-    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)" id="bt-s">1</div></div>
+    <div class="stat"><div class="stat-l">总场次</div><div class="stat-v" style="color:var(--blue)" id="bt-t">8</div></div>
+    <div class="stat"><div class="stat-l">方向正确</div><div class="stat-v" style="color:var(--green)" id="bt-d">6</div></div>
+    <div class="stat"><div class="stat-l">比分区间</div><div class="stat-v" style="color:var(--amber)" id="bt-s">2</div></div>
     <div class="stat"><div class="stat-l">红牌场次</div><div class="stat-v" style="color:var(--red)">2</div></div>
   </div>
   <div class="card" id="bt-list">
     <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">5/5</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">阿森纳 vs 马竞</strong> 预测阿森纳赢 → 1-0 ✓ · 漏失Under</span><span class="badge bg">✓</span></div>
     <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">5/6</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">拜仁 vs PSG</strong> 预测大球/拜仁赢 → 1-1 · 早球收缩</span><span class="badge br">✗</span></div>
     <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">5/7</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">维拉 vs 森林</strong> 预测2-1 → 4-0 · 红牌雪崩</span><span class="badge bg">方向✓</span></div>
-    <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">5/7</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">弗赖堡 vs 布拉加</strong> 预测2-1 → 3-1 · 红牌+1球</span><span class="badge bg">方向✓</span></div>
+    <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">6/11</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">墨西哥 vs 南非</strong> 预测1-0/2-1 → 2-0 · 方向✓比分✗ · 东道主净胜球被低估</span><span class="badge bg">方向✓</span></div>
+    <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">6/11</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">韩国 vs 捷克</strong> 首选1-1/备选2-1 → 2-1 · 备选精确命中(比分+方向)</span><span class="badge bg">✓✓</span></div>
+    <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">6/12</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">加拿大 vs 波黑</strong> 预测1-0/2-0/2-1 → 1-1 · 方向✗比分✗ · F0东道主修正对黑马型对手失效，已修订</span><span class="badge br">✗✗</span></div>
+    <div class="bt-row"><span style="font-size:11px;color:var(--text3);min-width:36px">6/12</span><span style="flex:1;color:var(--text2);font-size:13px"><strong style="color:var(--text)">美国 vs 巴拉圭</strong> 预测1-1/1-0/2-1 → 4-1 · 方向✓比分✗ · "回归叙事"误导，应看xG/失球数据</span><span class="badge bg">方向✓</span></div>
   </div>
   <div class="sec">添加世界杯比赛记录</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;background:var(--bg3);border-radius:8px">
